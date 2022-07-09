@@ -1,0 +1,8 @@
+{
+  "name": "boidsim",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "raylib"
+  ]
+
+}
