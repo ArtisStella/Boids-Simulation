@@ -6,8 +6,8 @@
 int randInt(int, int);
 std::mt19937 randomness((unsigned)std::time(nullptr));
 
-const int FLOCKSIZE = 20;
-Boid boids[FLOCKSIZE];
+const int FLOCKSIZE = 25;
+Boid flock[FLOCKSIZE];
 
 int main(void)
 {
@@ -21,11 +21,11 @@ int main(void)
     
 
     for (unsigned int i = 0; i < FLOCKSIZE; ++i) {
-        boids[i].SetColor(DARKGRAY);
-        boids[i].SetPosition({ (float) randInt(0, screenWidth), (float) randInt(0, screenHeight) });
+        flock[i].SetColor(DARKGRAY);
+        flock[i].SetPosition({ (float) randInt(0, screenWidth), (float) randInt(0, screenHeight) });
         float randAngle = randInt(0, 360) * (PI / 180);
-        boids[i].SetVelocity({ cos(randAngle), sin(randAngle) });
-        // boids[i].Debug(1);
+        flock[i].SetVelocity({ cos(randAngle), sin(randAngle) });
+        // flock[i].Debug(1);
     }
 
     Boid testBoid({ screenWidth / 2, screenHeight / 2 }, DARKGREEN);
@@ -43,12 +43,12 @@ int main(void)
 
         ClearBackground(RAYWHITE);
 
-        testBoid.Draw();
+        // testBoid.Draw();
         for (unsigned int i = 0; i < FLOCKSIZE; ++i) {
-            boids[i].Update();
-            boids[i].WarpCoordinates(screenWidth, screenHeight);
-            boids[i].Draw();
-            boids[i].Behaviours(boids, FLOCKSIZE);
+            flock[i].Update();
+            flock[i].WarpCoordinates(screenWidth, screenHeight);
+            flock[i].Draw();
+            flock[i].Behaviours(flock, FLOCKSIZE);
         }
         
         DrawFPS(10, 10);

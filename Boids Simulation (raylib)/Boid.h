@@ -27,10 +27,13 @@ private:
 	Vector2 position;
 	Vector2 velocity;
 	Vector2 acceleration;
-	float radiusOfVision = 60.0f;
+	float radiusOfVision = 55.0f;
 	float angle;
+	float scale = 0.5;
 	Color color;
 	bool debug = 0;
 
 	Vector2 Separation(Boid *flockMates, size_t n);
+	Vector2 Cohesion(Boid *flockMates, size_t n);
+	Vector2 Alignment(Boid *flockMates, size_t n);
 };

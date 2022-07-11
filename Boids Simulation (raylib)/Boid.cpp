@@ -13,6 +13,10 @@ Boid::Boid() {
 	relPoints[1] = {  10, -20 };
 	relPoints[2] = { -10, -20 };
 
+	relPoints[0] = Vector2Scale(relPoints[0], scale);
+	relPoints[1] = Vector2Scale(relPoints[1], scale);
+	relPoints[2] = Vector2Scale(relPoints[2], scale);
+
 	points[0] = Vector2Subtract(position, relPoints[0]);
 	points[1] = Vector2Subtract(position, relPoints[1]);
 	points[2] = Vector2Subtract(position, relPoints[2]);
@@ -60,7 +64,7 @@ void Boid::Update() {
 	SetPosition(Vector2Add(position, velocity));
 	velocity = Vector2Add(velocity, acceleration);
 
-	if (Vector2Length(velocity) < 0.5) {
+	if (Vector2Length(velocity) < 0.75) {
 		velocity = Vector2Scale(velocity, 2);
 	}
 
@@ -122,9 +126,13 @@ void Boid::Behaviours(Boid *flockMates, size_t n) {
 	
 	acceleration = Vector2Zero();
 
-	Vector2 avoid = Separation(flockMates, n);
-	avoid = Vector2Scale(avoid, 0.1);
-	acceleration = Vector2Add(acceleration, avoid);
+	Vector2 sep = Separation(flockMates, n);
+	sep = Vector2Scale(sep, 0.1);
+	acceleration = Vector2Add(acceleration, sep);
+
+	Vector2 align = Alignment(flockMates, n);
+	align = Vector2Scale(align, 0.1);
+	acceleration = Vector2Add(acceleration, align);
 }
 
 
@@ -153,6 +161,34 @@ Vector2 Boid::Separation(Boid *flockMates, size_t n) {
 	}
 
 	
+	return steering;
+}
+
+Vector2 Boid::Alignment(Boid* flockMates, size_t n) {
+	int total = 0;
+
+	Vector2 steering = Vector2Zero();
+
+	for (unsigned int i = 0; i < n; ++i) {
+		float dist = Vector2Distance(position, flockMates[i].position);
+
+		if (&flockMates[i] != this && dist < radiusOfVision) {
+			Vector2 temp = flockMates[i].velocity;
+			temp = Vector2Scale(temp, 1 / (dist * dist));
+			steering = Vector2Add(steering, temp);
+			total += 1;
+		}
+
+		if (total > 0) {
+			steering = Vector2Scale(steering, 1 / total);
+			steering = Vector2Normalize(steering);
+			steering = Vector2Scale(steering, 5);
+			// steering = Vector2Subtract(steering, velocity);
+			steering = Vector2Limit(steering, 1);
+		}
+	}
+
+
 	return steering;
 }
 
