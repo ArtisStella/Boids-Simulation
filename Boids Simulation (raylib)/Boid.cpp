@@ -3,74 +3,80 @@
 #include "raymath.h"
 #include <iostream>
 
-Vector2 Vector2Limit(Vector2 v, int maxLength);
+my::Vector2f Vector2Limit(my::Vector2f v, int minLength, int maxLength);
+Vector2 ToRayVec(my::Vector2f vec);
 
 Boid::Boid() {
 	color    = RAYWHITE;
-	position = Vector2Zero();
+	position = my::Vector2f();
 
-	relPoints[0] = {   0,  10 };
-	relPoints[1] = {  10, -20 };
-	relPoints[2] = { -10, -20 };
+	relPoints[0] = my::Vector2f(0, 10);
+	relPoints[1] = my::Vector2f(10, -20);
+	relPoints[2] = my::Vector2f(-10, -20);
 
-	relPoints[0] = Vector2Scale(relPoints[0], scale);
-	relPoints[1] = Vector2Scale(relPoints[1], scale);
-	relPoints[2] = Vector2Scale(relPoints[2], scale);
+	relPoints[0] = relPoints[0] * scale;
+	relPoints[1] = relPoints[1] * scale;
+	relPoints[2] = relPoints[2] * scale;
 
-	points[0] = Vector2Subtract(position, relPoints[0]);
-	points[1] = Vector2Subtract(position, relPoints[1]);
-	points[2] = Vector2Subtract(position, relPoints[2]);
+	points[0] = position - relPoints[0];
+	points[1] = position - relPoints[1];
+	points[2] = position - relPoints[2];
 
-	velocity = Vector2Zero();
-	acceleration = Vector2Zero();
+	velocity = my::Vector2f();
+	acceleration = my::Vector2f();
 
-	angle = Vector2Angle(velocity, Vector2Zero());
-	Rotate(angle - 90);
+	angle = velocity.AngleTo(my::Vector2f(0, 0));
+
+	Rotate(90 - angle);
 }
 
-Boid::Boid(Vector2 position, Color color) {
+Boid::Boid(my::Vector2f position, Color color) {
 	this->color = color;
 	this->position = position;
 
-	relPoints[0] = {   0,  10 };
-	relPoints[1] = {  10, -20 };
-	relPoints[2] = { -10, -20 };
+	relPoints[0] = my::Vector2f(  0,  10);
+	relPoints[1] = my::Vector2f( 10, -20);
+	relPoints[2] = my::Vector2f(-10, -20);
 
-	points[0] = Vector2Subtract( position, relPoints[0]);
-	points[1] = Vector2Subtract( position, relPoints[1]);
-	points[2] = Vector2Subtract( position, relPoints[2]);
+	relPoints[0] = relPoints[0] * scale;
+	relPoints[1] = relPoints[1] * scale;
+	relPoints[2] = relPoints[2] * scale;
 
-	velocity = { 0.0f, -1.0f };
-	acceleration = Vector2Zero();
+	points[0] = position - relPoints[0];
+	points[1] = position - relPoints[1];
+	points[2] = position - relPoints[2];
 
-	angle = Vector2Angle(velocity, Vector2Zero());
-	Rotate(angle - 90);
+	velocity = my::Vector2f(0.0f, -1.0f);
+	acceleration = my::Vector2f();
+
+	angle = velocity.AngleTo(my::Vector2f(0, 0));
+
+	Rotate(90 - angle);
 }
 
 void Boid::Draw() {
 	if (debug) {
-		Vector2 scaledVelo = Vector2Scale(velocity, 50);
-		Vector2 scaledAccel = Vector2Scale(acceleration, 500);
+		Vector2 endVelo = ToRayVec(position + (velocity * 10));
+		Vector2 endAcc =  ToRayVec(position + (acceleration * 10));
 
-		DrawLineEx(Vector2Add(position, scaledVelo), position, 2, {255, 0, 0, 100});
-		DrawLineEx(Vector2Add(position, scaledAccel), position, 2, {255, 100, 0, 100});
-		DrawCircleV(position, radiusOfVision, { 255, 160, 0, 100 });
+		DrawLineEx( ToRayVec(position), endVelo, 2, {255,   0,   0, 100});
+		DrawLineEx( ToRayVec(position), endAcc , 2, {255, 100,   0, 100});
+		DrawCircleV(ToRayVec(position), visionRad,  {255, 160,   0, 50 });
+		DrawCircleV(ToRayVec(position), avoidRad,   {  0, 160, 255, 50 });
+		DrawCircleV(ToRayVec(position),		   5,   {255, 255,   0, 255 });
 	}
 
-	DrawTriangle(points[0], points[1], points[2], color);
+	DrawTriangle(ToRayVec(points[0]), ToRayVec(points[1]), ToRayVec(points[2]), color);
 }
 
 void Boid::Update() {
-	SetPosition(Vector2Add(position, velocity));
-	velocity = Vector2Add(velocity, acceleration);
+	SetPosition(position + velocity);
+	velocity = velocity + acceleration;
+	velocity = Vector2Limit(velocity, 1, 5);
 
-	if (Vector2Length(velocity) < 0.75) {
-		velocity = Vector2Scale(velocity, 2);
-	}
-
-	float angleNew = Vector2Angle(velocity, { 0, 0 });
+	float angleNew = velocity.AngleTo(my::Vector2f(0, 0));;
 	if (angleNew != angle) {
-		Rotate(angleNew - angle);
+		Rotate(angle - angleNew);
 	}
 	angle = angleNew;
 }
@@ -87,24 +93,24 @@ void Boid::Rotate(float angle) {
 		float x = relPoints[i].x * cos(radianAngle) - relPoints[i].y * sin(radianAngle);
 		float y = relPoints[i].x * sin(radianAngle) + relPoints[i].y * cos(radianAngle);
 
-		relPoints[i] = { x, y };
-		points[i] = Vector2Subtract(position, { x, y });
+		relPoints[i] = my::Vector2f(x, y);
+		points[i] = position - my::Vector2f( x, y );
 	}
 }
 
-void Boid::SetPosition(Vector2 newPos) {
+void Boid::SetPosition(my::Vector2f newPos) {
 	position = newPos;
 
-	points[0] = Vector2Subtract(position, relPoints[0]);
-	points[1] = Vector2Subtract(position, relPoints[1]);
-	points[2] = Vector2Subtract(position, relPoints[2]);
+	points[0] = position - relPoints[0];
+	points[1] = position - relPoints[1];
+	points[2] = position - relPoints[2];
 }
 
-void Boid::SetVelocity(Vector2 velocity) {
-	if (this->velocity.x != velocity.x && this->velocity.y != velocity.y) {
+void Boid::SetVelocity(my::Vector2f velocity) {
+	if (this->velocity != velocity) {
 		this->velocity = velocity;
-		float angleNew = Vector2Angle(velocity, { 0, 0 });
-		Rotate(angleNew - angle);
+		float angleNew = velocity.AngleTo(my::Vector2f(0, 0));
+		Rotate(angle - angleNew);
 		angle = angleNew;
 	}
 }
@@ -124,84 +130,82 @@ void Boid::WarpCoordinates(float width, float height) {
 
 void Boid::Behaviours(Boid *flockMates, size_t n) {
 	
-	acceleration = Vector2Zero();
+	acceleration = my::Vector2f();
+	float sepWeight = 0.1;
+	float alignWeight = 0.1;
+	float coheWeight = 0.1;
 
-	Vector2 sep = Separation(flockMates, n);
-	sep = Vector2Scale(sep, 0.1);
-	acceleration = Vector2Add(acceleration, sep);
-
-	Vector2 align = Alignment(flockMates, n);
-	align = Vector2Scale(align, 0.1);
-	acceleration = Vector2Add(acceleration, align);
-}
-
-
-Vector2 Boid::Separation(Boid *flockMates, size_t n) {
-	int total = 0;
-
-	Vector2 steering = Vector2Zero();
+	int numBoids = 0;
+	my::Vector2f flockHeading;
+	my::Vector2f flockCenter;
+	my::Vector2f avoidanceHeading;
 
 	for (unsigned int i = 0; i < n; ++i) {
-		float dist = Vector2Distance(position, flockMates[i].position);
+		Boid *mate = &flockMates[i];
 
-		if (&flockMates[i] != this && dist < radiusOfVision) {
-			Vector2 temp = Vector2Subtract(position, flockMates[i].position);
-			temp = Vector2Scale(temp, 1 / (dist * dist));
-			steering = Vector2Add(steering, temp);
-			total += 1;
-		}
+		if (mate != this) {
+			my::Vector2f offset = mate->position - position;
+			
+			float sqrDst = offset.x * offset.x + offset.y * offset.y;
 
-		if (total > 0) {
-			steering = Vector2Scale(steering , 1 / total);
-			steering = Vector2Normalize(steering);
-			steering = Vector2Scale(steering, 5);
-			steering = Vector2Subtract(steering, velocity);
-			steering = Vector2Limit(steering, 1);
+			if (sqrDst < visionRad * visionRad) {
+				numBoids += 1;
+				flockHeading += mate->velocity.Normalize();
+				flockCenter += mate->position;
+
+				if (sqrDst < avoidRad * avoidRad) {
+					avoidanceHeading -= offset * (1 / avoidRad);
+				}
+			}
 		}
 	}
 
-	
-	return steering;
-}
-
-Vector2 Boid::Alignment(Boid* flockMates, size_t n) {
-	int total = 0;
-
-	Vector2 steering = Vector2Zero();
-
-	for (unsigned int i = 0; i < n; ++i) {
-		float dist = Vector2Distance(position, flockMates[i].position);
-
-		if (&flockMates[i] != this && dist < radiusOfVision) {
-			Vector2 temp = flockMates[i].velocity;
-			temp = Vector2Scale(temp, 1 / (dist * dist));
-			steering = Vector2Add(steering, temp);
-			total += 1;
+	if (numBoids != 0) {
+		
+		if (numBoids >= 2) {
+			int z = 1;
 		}
+		
+		flockCenter = flockCenter * (1.0f / (float) numBoids);
 
-		if (total > 0) {
-			steering = Vector2Scale(steering, 1 / total);
-			steering = Vector2Normalize(steering);
-			steering = Vector2Scale(steering, 5);
-			// steering = Vector2Subtract(steering, velocity);
-			steering = Vector2Limit(steering, 1);
+		my::Vector2f offsetToFMCenter = flockCenter - position;
+
+		if (avoidanceHeading.Length() != 0 && offsetToFMCenter.Length() != 0 && flockHeading.Length() != 0) {
+			my::Vector2f alignmentForce  = (SteerTowards(flockHeading)     * alignWeight);
+			my::Vector2f cohesionForce   = (SteerTowards(offsetToFMCenter) * coheWeight);
+			my::Vector2f separationForce = (SteerTowards(avoidanceHeading) * sepWeight);
+
+			// std::cout << ": " << cohesionForce.x << " " << cohesionForce.y << std::endl;
+
+			acceleration += alignmentForce;
+			acceleration += cohesionForce;
+			acceleration += separationForce;
 		}
 	}
-
-
-	return steering;
 }
 
-Vector2 Vector2Limit(Vector2 v, int maxLength) {
-	float squared_mag = pow(Vector2Length(v), 2);
-	Vector2 resultant = v;
+my::Vector2f Vector2Limit(my::Vector2f v, int minLength, int maxLength) {
+	float squaredMag = v.LengthSquared();
 
-	if (squared_mag > (maxLength * maxLength)) {
-		resultant.x = resultant.x / sqrt(squared_mag);
-		resultant.y = resultant.y / sqrt(squared_mag);
-		resultant.x = resultant.x * maxLength;
-		resultant.y = resultant.y * maxLength;
+	if (squaredMag == 0) {
+		return my::Vector2f();
+	}
+
+	my::Vector2f resultant = v;
+
+	if (maxLength != 0 && squaredMag > (maxLength*maxLength)) {
+		resultant = resultant.Normalize() * maxLength;
+	}
+	if (minLength != 0 && squaredMag < (minLength*minLength)) {
+		resultant = resultant.Normalize() * minLength;
 	}
 
 	return resultant;
+}
+Vector2 ToRayVec(my::Vector2f vec) {
+	return { vec.x, vec.y };
+}
+my::Vector2f Boid::SteerTowards(my::Vector2f vector) {
+	my::Vector2f v = (vector.Normalize() * 5) - velocity;
+	return Vector2Limit(v, 0, 3);
 }

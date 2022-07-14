@@ -26,5 +26,11 @@
     <ClInclude Include="Boid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MVector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

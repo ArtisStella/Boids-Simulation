@@ -1,11 +1,12 @@
 #pragma once
+#include "MVector.h"
 #include "raylib.h"
 
 class Boid
 {
 public:
 	Boid();
-	Boid(Vector2, Color);
+	Boid(my::Vector2f, Color);
 
 	void Draw();
 	void Update();
@@ -13,8 +14,8 @@ public:
 	void WarpCoordinates(float width, float height);
 	void Rotate(float angle);
 
-	void SetPosition(Vector2 position);
-	void SetVelocity(Vector2 velocity);
+	void SetPosition(my::Vector2f position);
+	void SetVelocity(my::Vector2f velocity);
 	void SetColor(Color color);
 	void Debug(bool deb);
 
@@ -22,18 +23,17 @@ public:
 
 
 private:
-	Vector2 points[3];
-	Vector2 relPoints[3];
-	Vector2 position;
-	Vector2 velocity;
-	Vector2 acceleration;
-	float radiusOfVision = 55.0f;
+	my::Vector2f points[3];
+	my::Vector2f relPoints[3];
+	my::Vector2f position;
+	my::Vector2f velocity;
+	my::Vector2f acceleration;
+	float visionRad = 60.0f;
+	float avoidRad = 25.0f;
 	float angle;
 	float scale = 0.5;
 	Color color;
 	bool debug = 0;
 
-	Vector2 Separation(Boid *flockMates, size_t n);
-	Vector2 Cohesion(Boid *flockMates, size_t n);
-	Vector2 Alignment(Boid *flockMates, size_t n);
+	my::Vector2f SteerTowards(my::Vector2f vector);
 };
